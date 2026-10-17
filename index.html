@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PhishGuard V2 | Evidence-Backed Threat Analyzer</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="bg-glow"></div>
+    <div class="bg-grid"></div>
+
+    <div class="app-container">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo-area">
+                <div class="logo-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                </div>
+                <div>
+                    <h1>PhishGuard <span class="badge">V2</span></h1>
+                    <p class="subtitle">Evidence-Backed Heuristic Risk & Threat Analyzer</p>
+                </div>
+            </div>
+            <nav class="nav-tabs">
+                <button class="nav-tab active" data-target="scanTab">Analyzer</button>
+                <button class="nav-tab" data-target="historyTab">History (<span id="historyCount">0</span>)</button>
+                <button class="nav-tab" data-target="aboutTab">Methodology</button>
+            </nav>
+        </header>
+
+        <!-- Main Content Area -->
+        <main>
+            <!-- TAB 1: ANALYZER -->
+            <section id="scanTab" class="tab-content active">
+                <!-- Mode Selector -->
+                <div class="mode-selector">
+                    <button class="mode-btn active" data-mode="url">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                        URL Scan
+                    </button>
+                    <button class="mode-btn" data-mode="message">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                        Message / SMS
+                    </button>
+                    <button class="mode-btn" data-mode="qr">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                        QR Code Image
+                    </button>
+                </div>
+
+                <!-- Input Card -->
+                <div class="card glass" id="inputCard">
+                    <!-- URL Input Form -->
+                    <div class="input-form active" id="urlForm">
+                        <label for="urlInput">Target URL or Hostname</label>
+                        <div class="input-wrapper">
+                            <span class="input-icon">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                            </span>
+                            <input type="text" id="urlInput" placeholder="e.g., https://example.com or example.com" autocomplete="off" spellcheck="false">
+                            <button id="urlScanBtn" class="primary-btn">Analyze URL</button>
+                        </div>
+                        <p class="input-hint">URLs are parsed locally. No connection is made to the target site.</p>
+                    </div>
+
+                    <!-- Message Input Form -->
+                    <div class="input-form" id="messageForm">
+                        <label for="messageInput">Suspicious Email or SMS Text Content</label>
+                        <div class="textarea-wrapper">
+                            <textarea id="messageInput" rows="5" placeholder="Paste suspicious SMS or email body text here... PhishGuard will extract and evaluate any embedded URLs and pressure tactics locally."></textarea>
+                        </div>
+                        <button id="messageScanBtn" class="primary-btn mt-3">Analyze Message & URLs</button>
+                    </div>
+
+                    <!-- QR Code Upload Form -->
+                    <div class="input-form" id="qrForm">
+                        <label>Upload QR Code Image (PNG, JPG, WebP)</label>
+                        <div class="drop-zone" id="dropZone">
+                            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                            <span>Drag & drop QR image here, or <strong>browse files</strong></span>
+                            <input type="file" id="qrFileInput" accept="image/png, image/jpeg, image/webp" class="file-input">
+                        </div>
+                        <div id="qrPreviewContainer" class="hidden">
+                            <div class="qr-preview-info">
+                                <span id="qrFileName"></span>
+                                <button id="removeQrBtn" class="text-btn">Remove</button>
+                            </div>
+                            <button id="qrScanBtn" class="primary-btn mt-3">Decode & Analyze QR</button>
+                        </div>
+                    </div>
+
+                    <!-- Scanning Loader State -->
+                    <div id="scannerState" class="scanner-state hidden">
+                        <div class="spinner"></div>
+                        <div class="scanner-text" id="scannerStatusText">Executing local heuristic checks...</div>
+                    </div>
+                </div>
+
+                <!-- Results Section -->
+                <section id="resultsSection" class="results-section hidden">
+                    <!-- Status Banner -->
+                    <div class="card glass result-header-card">
+                        <div class="result-header">
+                            <div id="threatBadge" class="threat-badge">
+                                <span id="threatIcon"></span>
+                                <span id="threatTitle">Evaluating...</span>
+                            </div>
+                            <div class="score-display">
+                                <span class="score-label">Heuristic Risk Score:</span>
+                                <span id="scoreValue" class="score-number">0/100</span>
+                            </div>
+                        </div>
+                        <div class="risk-bar-container">
+                            <div id="riskBarFill" class="risk-bar-fill"></div>
+                        </div>
+                        <p class="disclaimer-text"><strong>Notice:</strong> This score represents local heuristic rule matches only. Low indicator counts do not guarantee site safety.</p>
+                    </div>
+
+                    <!-- Parsed Breakdown / Message Findings / QR Content -->
+                    <div class="card glass" id="analysisDetailsCard">
+                        <h3 class="section-title">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                            Structural Inspection & Evidence
+                        </h3>
+                        <div id="dynamicDetailsContent">
+                            <!-- Populated dynamically based on mode -->
+                        </div>
+                    </div>
+
+                    <!-- Heuristic Indicators & Recommendations -->
+                    <div class="breakdown-grid">
+                        <div class="card glass breakdown-card">
+                            <h3 class="section-title">Triggered Heuristics</h3>
+                            <ul id="indicatorsList" class="indicators-list"></ul>
+                        </div>
+                        <div class="card glass breakdown-card">
+                            <h3 class="section-title">Security Guidance</h3>
+                            <ul id="recommendationsList" class="recommendations-list"></ul>
+                        </div>
+                    </div>
+
+                    <!-- External Reputation Status Card -->
+                    <div class="card glass reputation-card">
+                        <h3 class="section-title">External Threat Intelligence</h3>
+                        <div class="reputation-status-row">
+                            <span id="repStatusBadge" class="rep-badge unverified">Not Checked (Local Mode)</span>
+                            <span id="repProviderText" class="rep-provider">API endpoint unconfigured</span>
+                        </div>
+                        <p class="rep-desc">To query live threat intelligence providers (e.g., Safe Browsing), configure a secure serverless backend proxy endpoint.</p>
+                    </div>
+
+                    <!-- Action Toolbar -->
+                    <div class="action-toolbar">
+                        <button id="exportJsonBtn" class="action-btn">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                            Export JSON Report
+                        </button>
+                        <button id="printReportBtn" class="action-btn">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+                            Print / Save PDF
+                        </button>
+                        <button id="newScanBtn" class="secondary-btn">New Scan</button>
+                    </div>
+                </section>
+            </section>
+
+            <!-- TAB 2: HISTORY -->
+            <section id="historyTab" class="tab-content">
+                <div class="card glass history-container">
+                    <div class="history-header">
+                        <h2>Scan History</h2>
+                        <div class="history-controls">
+                            <input type="text" id="historySearch" placeholder="Search saved scans..." class="search-input">
+                            <button id="clearHistoryBtn" class="danger-btn">Clear History</button>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="history-table" id="historyTable">
+                            <thead>
+                                <tr>
+                                    <th>Timestamp</th>
+                                    <th>Mode</th>
+                                    <th>Target / Summary</th>
+                                    <th>Risk Score</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="historyTableBody">
+                                <!-- Populated dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div id="emptyHistoryState" class="empty-state hidden">
+                        <p>No scan history recorded yet. Local scans are saved automatically.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 3: METHODOLOGY -->
+            <section id="aboutTab" class="tab-content">
+                <div class="card glass about-card">
+                    <h2>Methodology & Limitations</h2>
+                    <div class="about-section">
+                        <h3>What PhishGuard V2 Does</h3>
+                        <p>PhishGuard V2 performs strict local parsing of URLs, email/SMS message text, and QR code payloads. It evaluates structural anomalies such as excessive subdomain nesting, suspicious userinfo tokens, IP address hostnames, character encoding confusion, and psychological pressure phrasing without visiting or navigating to untrusted targets.</p>
+                    </div>
+                    <div class="about-section">
+                        <h3>Limitations of Heuristics</h3>
+                        <p>Heuristic rules generate probabilistic risk indicators, not definitive security verdicts. Brand-new phishing domains without lexical anomalies can bypass rules, while complex legitimate sites might trigger false positives. <strong>Absence of triggered heuristics does not prove a target is safe.</strong></p>
+                    </div>
+                    <div class="about-section">
+                        <h3>Privacy Commitment</h3>
+                        <p>All parsing runs client-side in your browser. Scan records are stored locally in your browser's <code>localStorage</code> (limited to the last 20 entries with sensitive query tokens redacted). No data is transmitted to external servers unless an optional threat intelligence API proxy is explicitly configured.</p>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>&copy; 2026 PhishGuard V2. Open architecture evidence-backed security tool.</p>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
